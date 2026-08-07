@@ -94,6 +94,16 @@ window.addEventListener('message', function (event) {
         if (window.YS_Owner) {
             window.YS_Owner.open(data.shop);
         }
+    } else if (data.action === 'pedPlaced') {
+        if (data.coords) {
+            document.getElementById('coords-x').value = data.coords.x;
+            document.getElementById('coords-y').value = data.coords.y;
+            document.getElementById('coords-z').value = data.coords.z;
+            document.getElementById('coords-h').value = data.coords.h;
+        }
+        appEl.classList.remove('hidden');
+        document.getElementById('admin-panel').classList.remove('hidden');
+        window.YS_App.playSound('success');
     }
 });
 

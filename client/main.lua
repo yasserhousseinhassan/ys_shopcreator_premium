@@ -141,6 +141,18 @@ RegisterNUICallback('getCoords', function(data, cb)
     })
 end)
 
+RegisterNUICallback('startPedPlacement', function(data, cb)
+    data = data or {}
+    YS_Placement.Start(data.model, data.coords, function(coords)
+        SetNuiFocus(true, true)
+        SendNUIMessage({
+            action = 'pedPlaced',
+            coords = coords
+        })
+    end)
+    cb('ok')
+end)
+
 RegisterNUICallback('createShop', function(data, cb)
     TriggerServerEvent('ys_shopcreator:server:createShop', data)
     cb('ok')

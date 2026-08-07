@@ -28,6 +28,7 @@ shared_scripts {
 }
 
 client_scripts {
+    'client/placement.lua',
     'client/peds.lua',
     'client/blips.lua',
     'client/main.lua'

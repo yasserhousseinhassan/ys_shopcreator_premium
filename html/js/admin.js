@@ -3,6 +3,7 @@ window.YS_Admin = {
     serverItems: [],
     isEditing: false,
     editingIdentifier: null,
+    inventoryImagePath: 'nui://ox_inventory/web/images/',
 
     init: function (shops, colorPresets, defaultPeds, serverItems) {
         this.shops = shops || {};
@@ -113,25 +114,96 @@ window.YS_Admin = {
         });
     },
 
+    openItemPickerModal: function () {
+        const modal = document.getElementById('modal-item-picker');
+        if (!modal) return;
+
+        modal.classList.remove('hidden');
+        document.getElementById('item-picker-search').value = '';
+        this.renderItemPickerGrid('');
+        window.YS_App.playSound('click');
+    },
+
+    closeItemPickerModal: function () {
+        const modal = document.getElementById('modal-item-picker');
+        if (modal) modal.classList.add('hidden');
+    },
+
+    renderItemPickerGrid: function (searchQuery) {
+        const grid = document.getElementById('item-picker-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        searchQuery = (searchQuery || '').toLowerCase().trim();
+        const items = this.serverItems || [];
+
+        const filtered = items.filter(item => {
+            if (!searchQuery) return true;
+            return (item.label && item.label.toLowerCase().includes(searchQuery)) ||
+                   (item.name && item.name.toLowerCase().includes(searchQuery));
+        });
+
+        if (filtered.length === 0) {
+            grid.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 30px;">
+                    <i class="fa-solid fa-box-open" style="font-size: 32px; opacity: 0.5;"></i>
+                    <p class="mt-2">Aucun objet trouvé dans l'inventaire</p>
+                </div>
+            `;
+            return;
+        }
+
+        const isBrowser = typeof GetParentResourceName === 'undefined';
+        const imgPath = isBrowser ? 'https://raw.githubusercontent.com/overextended/ox_inventory/main/web/images/' : this.inventoryImagePath;
+
+        filtered.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'item-picker-card';
+
+            const imgUrl = `${imgPath}${item.name}.png`;
+
+            card.innerHTML = `
+                <div class="item-picker-card-img">
+                    <img src="${imgUrl}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <i class="fa-solid fa-box-archive" style="display: none;"></i>
+                </div>
+                <div class="item-picker-card-title">${item.label || item.name}</div>
+                <div class="item-picker-card-code"><code>${item.name}</code></div>
+            `;
+
+            card.onclick = () => {
+                this.addItemRow({
+                    name: item.name,
+                    label: item.label || item.name,
+                    price: 10,
+                    stock: -1,
+                    category: 'food'
+                });
+                this.closeItemPickerModal();
+                window.YS_App.playSound('success');
+            };
+
+            grid.appendChild(card);
+        });
+    },
+
     addItemRow: function (itemData = {}) {
         const tbody = document.getElementById('items-table-body');
         if (!tbody) return;
 
-        let selectOptionsHtml = '<option value="">-- Choisir un item de l\'inventaire --</option>';
-        if (this.serverItems && this.serverItems.length > 0) {
-            this.serverItems.forEach(item => {
-                const selected = (itemData.name === item.name) ? 'selected' : '';
-                selectOptionsHtml += `<option value="${item.name}" data-label="${item.label}" ${selected}>${item.label} (${item.name})</option>`;
-            });
-        }
-
         const tr = document.createElement('tr');
+        const isBrowser = typeof GetParentResourceName === 'undefined';
+        const imgPath = isBrowser ? 'https://raw.githubusercontent.com/overextended/ox_inventory/main/web/images/' : this.inventoryImagePath;
+        const imgUrl = itemData.name ? `${imgPath}${itemData.name}.png` : '';
+
         tr.innerHTML = `
             <td>
-                <select class="item-select-input" style="width: 100%;">
-                    ${selectOptionsHtml}
-                </select>
-                <input type="hidden" class="item-name-input" value="${itemData.name || ''}">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 28px; height: 28px; background: rgba(15,23,42,0.8); border: 1px solid var(--border-color); border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
+                        ${itemData.name ? `<img src="${imgUrl}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" style="width: 22px; height: 22px; object-fit: contain;"><i class="fa-solid fa-box" style="display: none; font-size: 12px; color: var(--accent-color);"></i>` : '<i class="fa-solid fa-box" style="font-size: 12px; color: var(--accent-color);"></i>'}
+                    </div>
+                    <input type="text" class="item-name-input" value="${itemData.name || ''}" placeholder="nom_item" required style="width: 100%;">
+                </div>
             </td>
             <td><input type="text" class="item-label-input" value="${itemData.label || ''}" placeholder="Label affiché" required></td>
             <td><input type="number" class="item-price-input" value="${itemData.price || 10}" placeholder="Prix $" required></td>
@@ -139,21 +211,6 @@ window.YS_Admin = {
             <td><input type="text" class="item-cat-input" value="${itemData.category || 'food'}" placeholder="Catégorie"></td>
             <td><button type="button" class="btn-danger-sm btn-delete-row"><i class="fa-solid fa-trash"></i></button></td>
         `;
-
-        const selectEl = tr.querySelector('.item-select-input');
-        const nameInput = tr.querySelector('.item-name-input');
-        const labelInput = tr.querySelector('.item-label-input');
-
-        selectEl.addEventListener('change', (e) => {
-            const selectedOpt = selectEl.options[selectEl.selectedIndex];
-            const itemName = selectedOpt.value;
-            const itemLabel = selectedOpt.getAttribute('data-label') || itemName;
-
-            nameInput.value = itemName;
-            if (itemLabel) {
-                labelInput.value = itemLabel;
-            }
-        });
 
         tr.querySelector('.btn-delete-row').addEventListener('click', () => {
             tr.remove();
@@ -242,6 +299,22 @@ window.YS_Admin = {
     },
 
     bindEvents: function () {
+        // Bouton Placement 3D du PNJ
+        const btnPlace3D = document.getElementById('btn-place-3d-ped');
+        if (btnPlace3D) {
+            btnPlace3D.onclick = () => {
+                const model = document.getElementById('npc-model').value.trim() || 'mp_m_shopkeep_01';
+                const coords = {
+                    x: parseFloat(document.getElementById('coords-x').value) || 0,
+                    y: parseFloat(document.getElementById('coords-y').value) || 0,
+                    z: parseFloat(document.getElementById('coords-z').value) || 0,
+                    h: parseFloat(document.getElementById('coords-h').value) || 0
+                };
+                document.getElementById('app').classList.add('hidden');
+                window.YS_App.post('startPedPlacement', { model: model, coords: coords });
+            };
+        }
+
         // Bouton Récupérer Coordonnées
         const btnGetCoords = document.getElementById('btn-get-coords');
         if (btnGetCoords) {
@@ -279,10 +352,22 @@ window.YS_Admin = {
             };
         }
 
-        // Bouton Ajouter une ligne d'Item
+        // Bouton Ouvrir le Sélecteur d'Items Visuel
         const btnAddItem = document.getElementById('btn-add-item-row');
         if (btnAddItem) {
-            btnAddItem.onclick = () => this.addItemRow();
+            btnAddItem.onclick = () => this.openItemPickerModal();
+        }
+
+        // Fermer le Sélecteur d'Items
+        const btnClosePicker = document.getElementById('btn-close-item-picker');
+        if (btnClosePicker) {
+            btnClosePicker.onclick = () => this.closeItemPickerModal();
+        }
+
+        // Recherche en direct dans le sélecteur d'items
+        const inputSearchPicker = document.getElementById('item-picker-search');
+        if (inputSearchPicker) {
+            inputSearchPicker.oninput = (e) => this.renderItemPickerGrid(e.target.value);
         }
 
         // Form submission (Création OU Édition)
@@ -296,8 +381,7 @@ window.YS_Admin = {
                 const items = [];
                 itemRows.forEach(row => {
                     const nameInput = row.querySelector('.item-name-input');
-                    const selectEl = row.querySelector('.item-select-input');
-                    const name = (nameInput.value || (selectEl ? selectEl.value : '')).trim();
+                    const name = (nameInput ? nameInput.value : '').trim();
                     const label = row.querySelector('.item-label-input').value.trim();
                     const price = parseFloat(row.querySelector('.item-price-input').value) || 0;
                     const stock = parseInt(row.querySelector('.item-stock-input').value);
