@@ -9,7 +9,7 @@ local function DisplayPlacementHelpText()
     BeginTextCommandDisplayHelp('THREEDS_HELP')
     AddTextComponentSubstringPlayerName(
         "~g~[ENTRÉE]~s~ Valider ~r~[ECHAP]~s~ Annuler\n" ..
-        "~b~[W/A/S/D]~s~ Déplacer ~y~[Q/E]~s~ Tourner"
+        "~b~[W/A/S/D]~s~ Déplacer ~y~[Q/E]~s~ Tourner ~m~[R/F]~s~ Hauteur (Haut/Bas)"
     )
     EndTextCommandDisplayHelp(0, false, true, -1)
 end
@@ -24,6 +24,9 @@ function YS_Placement.Start(modelName, initialCoords, callback)
     local playerPed = PlayerPedId()
     local pCoords = GetEntityCoords(playerPed)
     local pHeading = GetEntityHeading(playerPed)
+
+    -- Geler le personnage du joueur pour qu'il ne bouge pas pendant le déplacement du PNJ
+    FreezeEntityPosition(playerPed, true)
 
     -- Coordonnées initiales (devant le joueur si non définies)
     if initialCoords and initialCoords.x and tonumber(initialCoords.x) ~= 0 then
@@ -66,23 +69,25 @@ function YS_Placement.Start(modelName, initialCoords, callback)
 
     -- Boucle interactive 3D en temps réel
     CreateThread(function()
-        local moveSpeed = 0.04
+        local moveSpeed = 0.03
 
         while isPlacingPed do
             Wait(0)
 
             DisplayPlacementHelpText()
 
-            -- Bloquer les tirs et les actions conflictuelles du joueur
+            -- Bloquer les mouvements du joueur, tirs et attaques
+            DisableControlAction(0, 30, true) -- Gauche/Droite joueur
+            DisableControlAction(0, 31, true) -- Avant/Arrière joueur
             DisableControlAction(0, 24, true) -- Attaque
             DisableControlAction(0, 25, true) -- Viser
             DisableControlAction(0, 140, true) -- Melee
             DisableControlAction(0, 141, true)
             DisableControlAction(0, 142, true)
 
-            local dx, dy = 0.0, 0.0
+            local dx, dy, dz = 0.0, 0.0, 0.0
 
-            -- Contrôles Déplacement WASD / Flèches
+            -- Contrôles Déplacement Horizontale WASD / Flèches
             if IsControlPressed(0, 32) or IsControlPressed(0, 172) then -- W / Flèche Haut
                 dy = dy + moveSpeed
             end
@@ -96,6 +101,14 @@ function YS_Placement.Start(modelName, initialCoords, callback)
                 dx = dx + moveSpeed
             end
 
+            -- Contrôles Hauteur Z (Haut / Bas avec R / F / PageUp / PageDown / Shift / Ctrl)
+            if IsControlPressed(0, 45) or IsControlPressed(0, 10) or IsControlPressed(0, 21) then -- R / PageUp / Shift
+                dz = dz + moveSpeed
+            end
+            if IsControlPressed(0, 23) or IsControlPressed(0, 11) or IsControlPressed(0, 36) then -- F / PageDown / Ctrl
+                dz = dz - moveSpeed
+            end
+
             -- Application du déplacement relatif au Ped
             if dx ~= 0.0 or dy ~= 0.0 then
                 local camHeading = GetGameplayCamRot(2).z
@@ -103,10 +116,13 @@ function YS_Placement.Start(modelName, initialCoords, callback)
                 local nx = currentCoords.x + (dx * math.cos(rad) - dy * math.sin(rad))
                 local ny = currentCoords.y + (dx * math.sin(rad) + dy * math.cos(rad))
 
-                local foundGround, groundZ = GetGroundZFor_3dCoord(nx, ny, currentCoords.z + 1.0, false)
-                local nz = foundGround and groundZ or currentCoords.z
+                currentCoords = vector3(nx, ny, currentCoords.z)
+                SetEntityCoords(ghostPed, currentCoords.x, currentCoords.y, currentCoords.z, false, false, false, false)
+            end
 
-                currentCoords = vector3(nx, ny, nz)
+            -- Application du déplacement en hauteur Z
+            if dz ~= 0.0 then
+                currentCoords = vector3(currentCoords.x, currentCoords.y, currentCoords.z + dz)
                 SetEntityCoords(ghostPed, currentCoords.x, currentCoords.y, currentCoords.z, false, false, false, false)
             end
 
@@ -128,6 +144,9 @@ function YS_Placement.Start(modelName, initialCoords, callback)
                     ghostPed = nil
                 end
 
+                -- Dégeler le joueur
+                FreezeEntityPosition(PlayerPedId(), false)
+
                 PlaySoundFrontend(-1, "SELECT", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
 
                 if callback then
@@ -148,6 +167,9 @@ function YS_Placement.Start(modelName, initialCoords, callback)
                     DeleteEntity(ghostPed)
                     ghostPed = nil
                 end
+
+                -- Dégeler le joueur
+                FreezeEntityPosition(PlayerPedId(), false)
 
                 PlaySoundFrontend(-1, "CANCEL", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
 
