@@ -336,8 +336,8 @@
                             <i class="fa-solid fa-boxes-stacked"></i>
                         </div>
                         <div>
-                            <h2 style="font-size:18px; font-weight:700;">Sélectionner un Article dans l'Inventaire</h2>
-                            <p style="font-size:12px; color:#94a3b8;">Cliquez sur n'importe quel item pour l'ajouter à votre magasin</p>
+                            <h2 style="font-size:18px; font-weight:700;">Sélectionner des Articles dans l'Inventaire</h2>
+                            <p style="font-size:12px; color:#94a3b8;">Cliquez sur plusieurs objets pour les ajouter ensemble à votre magasin</p>
                         </div>
                     </div>
                     <button class="btn-close" id="btn-close-item-picker"><i class="fa-solid fa-xmark"></i></button>
@@ -353,6 +353,16 @@
                 <div class="item-picker-grid-wrapper">
                     <div id="item-picker-grid" class="item-picker-grid">
                         <!-- Dynamic item cards inserted here -->
+                    </div>
+                </div>
+
+                <div class="item-picker-footer">
+                    <span id="selected-items-count-label" style="font-size: 13px; font-weight: 600; color: #94a3b8;">0 article(s) sélectionné(s)</span>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" id="btn-clear-item-selection" class="btn-secondary" style="font-size: 12px;">Réinitialiser</button>
+                        <button type="button" id="btn-confirm-add-selected-items" class="btn-cyber-primary" style="font-size: 13px; padding: 8px 16px;">
+                            <i class="fa-solid fa-check"></i> Ajouter les Articles (<span id="btn-confirm-count">0</span>)
+                        </button>
                     </div>
                 </div>
             </div>

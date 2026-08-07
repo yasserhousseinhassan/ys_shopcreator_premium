@@ -784,6 +784,7 @@ input[type="color"] {
 }
 
 .item-picker-card {
+    position: relative;
     background: rgba(30, 41, 59, 0.7);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -794,6 +795,29 @@ input[type="color"] {
     text-align: center;
     cursor: pointer;
     transition: all 0.2s ease;
+}
+
+.item-picker-card.selected {
+    border-color: #00f2fe;
+    background: rgba(0, 242, 254, 0.12);
+    box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
+}
+
+.picker-selected-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    background: #00f2fe;
+    color: #0f172a;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 800;
+    box-shadow: 0 0 8px rgba(0, 242, 254, 0.5);
 }
 
 .item-picker-card:hover {
@@ -843,4 +867,13 @@ input[type="color"] {
     background: rgba(15, 23, 42, 0.6);
     padding: 2px 6px;
     border-radius: 4px;
+}
+
+.item-picker-footer {
+    padding: 14px 20px;
+    background: rgba(15, 23, 42, 0.95);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }

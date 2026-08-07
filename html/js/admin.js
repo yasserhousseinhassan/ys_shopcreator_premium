@@ -4,12 +4,14 @@ window.YS_Admin = {
     isEditing: false,
     editingIdentifier: null,
     inventoryImagePath: 'nui://ox_inventory/web/images/',
+    selectedPickerItems: [],
 
     init: function (shops, colorPresets, defaultPeds, serverItems) {
         this.shops = shops || {};
         this.serverItems = serverItems || [];
         this.isEditing = false;
         this.editingIdentifier = null;
+        this.selectedPickerItems = [];
 
         this.renderTabs();
         this.renderColorPresets(colorPresets);
@@ -22,6 +24,7 @@ window.YS_Admin = {
     resetForm: function () {
         this.isEditing = false;
         this.editingIdentifier = null;
+        this.selectedPickerItems = [];
 
         const form = document.getElementById('form-shop-creator');
         if (form) form.reset();
@@ -118,6 +121,9 @@ window.YS_Admin = {
         const modal = document.getElementById('modal-item-picker');
         if (!modal) return;
 
+        this.selectedPickerItems = [];
+        this.updatePickerFooterCount();
+
         modal.classList.remove('hidden');
         document.getElementById('item-picker-search').value = '';
         this.renderItemPickerGrid('');
@@ -127,6 +133,15 @@ window.YS_Admin = {
     closeItemPickerModal: function () {
         const modal = document.getElementById('modal-item-picker');
         if (modal) modal.classList.add('hidden');
+    },
+
+    updatePickerFooterCount: function () {
+        const count = this.selectedPickerItems.length;
+        const countLabel = document.getElementById('selected-items-count-label');
+        const btnCount = document.getElementById('btn-confirm-count');
+
+        if (countLabel) countLabel.textContent = `${count} article(s) sélectionné(s)`;
+        if (btnCount) btnCount.textContent = count;
     },
 
     renderItemPickerGrid: function (searchQuery) {
@@ -157,12 +172,14 @@ window.YS_Admin = {
         const imgPath = isBrowser ? 'https://raw.githubusercontent.com/overextended/ox_inventory/main/web/images/' : this.inventoryImagePath;
 
         filtered.forEach(item => {
+            const isSelected = this.selectedPickerItems.some(i => i.name === item.name);
             const card = document.createElement('div');
-            card.className = 'item-picker-card';
+            card.className = `item-picker-card ${isSelected ? 'selected' : ''}`;
 
             const imgUrl = `${imgPath}${item.name}.png`;
 
             card.innerHTML = `
+                <div class="picker-selected-badge" style="${isSelected ? '' : 'display:none;'}"><i class="fa-solid fa-check"></i></div>
                 <div class="item-picker-card-img">
                     <img src="${imgUrl}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                     <i class="fa-solid fa-box-archive" style="display: none;"></i>
@@ -172,15 +189,24 @@ window.YS_Admin = {
             `;
 
             card.onclick = () => {
-                this.addItemRow({
-                    name: item.name,
-                    label: item.label || item.name,
-                    price: 10,
-                    stock: -1,
-                    category: 'food'
-                });
-                this.closeItemPickerModal();
-                window.YS_App.playSound('success');
+                const index = this.selectedPickerItems.findIndex(i => i.name === item.name);
+                if (index > -1) {
+                    this.selectedPickerItems.splice(index, 1);
+                    card.classList.remove('selected');
+                    card.querySelector('.picker-selected-badge').style.display = 'none';
+                } else {
+                    this.selectedPickerItems.push({
+                        name: item.name,
+                        label: item.label || item.name,
+                        price: 10,
+                        stock: -1,
+                        category: 'food'
+                    });
+                    card.classList.add('selected');
+                    card.querySelector('.picker-selected-badge').style.display = 'flex';
+                }
+                this.updatePickerFooterCount();
+                window.YS_App.playSound('click');
             };
 
             grid.appendChild(card);
@@ -368,6 +394,33 @@ window.YS_Admin = {
         const inputSearchPicker = document.getElementById('item-picker-search');
         if (inputSearchPicker) {
             inputSearchPicker.oninput = (e) => this.renderItemPickerGrid(e.target.value);
+        }
+
+        // Bouton Réinitialiser la Sélection Multiple
+        const btnClearSelection = document.getElementById('btn-clear-item-selection');
+        if (btnClearSelection) {
+            btnClearSelection.onclick = () => {
+                this.selectedPickerItems = [];
+                this.updatePickerFooterCount();
+                const searchQuery = document.getElementById('item-picker-search').value;
+                this.renderItemPickerGrid(searchQuery);
+                window.YS_App.playSound('click');
+            };
+        }
+
+        // Bouton Valider & Ajouter les Articles Sélectionnés
+        const btnConfirmAdd = document.getElementById('btn-confirm-add-selected-items');
+        if (btnConfirmAdd) {
+            btnConfirmAdd.onclick = () => {
+                if (this.selectedPickerItems.length === 0) return;
+
+                this.selectedPickerItems.forEach(item => {
+                    this.addItemRow(item);
+                });
+
+                this.closeItemPickerModal();
+                window.YS_App.playSound('success');
+            };
         }
 
         // Form submission (Création OU Édition)
