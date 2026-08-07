@@ -9,7 +9,7 @@ local function DisplayPlacementHelpText()
     BeginTextCommandDisplayHelp('THREEDS_HELP')
     AddTextComponentSubstringPlayerName(
         "~g~[ENTRÉE]~s~ Valider ~r~[ECHAP]~s~ Annuler\n" ..
-        "~b~[W/A/S/D]~s~ Déplacer ~y~[Q/E]~s~ Tourner ~m~[R/F]~s~ Hauteur (Haut/Bas)"
+        "~b~[WASD]~s~ Deplacer ~m~[Flèche ↑/↓]~s~ Hauteur (Haut/Bas) ~y~[Q/E ou Flèche ←/→]~s~ Tourner"
     )
     EndTextCommandDisplayHelp(0, false, true, -1)
 end
@@ -87,25 +87,25 @@ function YS_Placement.Start(modelName, initialCoords, callback)
 
             local dx, dy, dz = 0.0, 0.0, 0.0
 
-            -- Contrôles Déplacement Horizontale WASD / Flèches
-            if IsControlPressed(0, 32) or IsControlPressed(0, 172) then -- W / Flèche Haut
+            -- Contrôles Déplacement Horizontale WASD
+            if IsControlPressed(0, 32) then -- W (Avant)
                 dy = dy + moveSpeed
             end
-            if IsControlPressed(0, 33) or IsControlPressed(0, 173) then -- S / Flèche Bas
+            if IsControlPressed(0, 33) then -- S (Arrière)
                 dy = dy - moveSpeed
             end
-            if IsControlPressed(0, 34) or IsControlPressed(0, 174) then -- A / Flèche Gauche
+            if IsControlPressed(0, 34) then -- A (Gauche)
                 dx = dx - moveSpeed
             end
-            if IsControlPressed(0, 35) or IsControlPressed(0, 175) then -- D / Flèche Droite
+            if IsControlPressed(0, 35) then -- D (Droite)
                 dx = dx + moveSpeed
             end
 
-            -- Contrôles Hauteur Z (Haut / Bas avec R / F / PageUp / PageDown / Shift / Ctrl)
-            if IsControlPressed(0, 45) or IsControlPressed(0, 10) or IsControlPressed(0, 21) then -- R / PageUp / Shift
+            -- Contrôles Hauteur Z (Haut / Bas avec Flèche Haut / Flèche Bas)
+            if IsControlPressed(0, 172) or IsControlPressed(0, 27) then -- Flèche HAUT
                 dz = dz + moveSpeed
             end
-            if IsControlPressed(0, 23) or IsControlPressed(0, 11) or IsControlPressed(0, 36) then -- F / PageDown / Ctrl
+            if IsControlPressed(0, 173) or IsControlPressed(0, 28) then -- Flèche BAS
                 dz = dz - moveSpeed
             end
 
@@ -126,12 +126,12 @@ function YS_Placement.Start(modelName, initialCoords, callback)
                 SetEntityCoords(ghostPed, currentCoords.x, currentCoords.y, currentCoords.z, false, false, false, false)
             end
 
-            -- Rotation Q / E (Heading)
-            if IsControlPressed(0, 44) or IsControlPressed(0, 52) then -- Q / Molette bas
+            -- Rotation Q / E ou Flèche Gauche / Flèche Droite
+            if IsControlPressed(0, 44) or IsControlPressed(0, 174) or IsControlPressed(0, 52) then -- Q / Flèche Gauche
                 currentHeading = (currentHeading + 2.0) % 360.0
                 SetEntityHeading(ghostPed, currentHeading)
             end
-            if IsControlPressed(0, 38) or IsControlPressed(0, 51) then -- E / Molette haut
+            if IsControlPressed(0, 38) or IsControlPressed(0, 175) or IsControlPressed(0, 51) then -- E / Flèche Droite
                 currentHeading = (currentHeading - 2.0) % 360.0
                 SetEntityHeading(ghostPed, currentHeading)
             end
