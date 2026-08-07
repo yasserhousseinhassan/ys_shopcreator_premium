@@ -34,8 +34,8 @@ function YS_Peds.SpawnPed(identifier, pedModel, coords)
 
     if not HasModelLoaded(hash) then return nil end
 
-    -- Creation du ped a la hauteur Z exacte (ajustement de 0.98 si besoin pour les pieds)
-    local ped = CreatePed(4, hash, x, y, z - 0.98, h, false, true)
+    -- Creation du ped a la hauteur Z exacte choisie par l'administrateur
+    local ped = CreatePed(4, hash, x, y, z, h, false, true)
     
     SetEntityHeading(ped, h)
     FreezeEntityPosition(ped, true)
