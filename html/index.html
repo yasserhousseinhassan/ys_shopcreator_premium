@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YS Shop Creator Premium</title>
+    
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS Style -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div id="app" class="hidden">
+
+        <!-- ========================================================= -->
+        <!-- 👑 PANEL ADMIN SHOP CREATOR -->
+        <!-- ========================================================= -->
+        <div id="admin-panel" class="modal-container hidden">
+            <div class="glass-box admin-box">
+                
+                <!-- Admin Header -->
+                <div class="admin-header">
+                    <div class="brand">
+                        <div class="brand-logo">
+                            <i class="fa-solid fa-store"></i>
+                        </div>
+                        <div>
+                            <h1>YS Shop Creator <span class="badge-premium">PREMIUM</span></h1>
+                            <p>Système complet de création & gestion de magasins FiveM</p>
+                        </div>
+                    </div>
+                    <button class="btn-close" id="btn-close-admin"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <!-- Admin Tabs -->
+                <div class="admin-tabs">
+                    <button class="tab-btn active" data-tab="tab-create">
+                        <i class="fa-solid fa-plus-circle"></i> Créer un Magasin
+                    </button>
+                    <button class="tab-btn" data-tab="tab-manage">
+                        <i class="fa-solid fa-list-check"></i> Gérer les Magasins (<span id="shop-count">0</span>)
+                    </button>
+                </div>
+
+                <!-- Tab 1: Formulaire de Création / Édition -->
+                <div id="tab-create" class="tab-content active">
+                    <form id="form-shop-creator" class="creator-grid">
+                        
+                        <!-- Col 1: Informations Générales -->
+                        <div class="form-section">
+                            <h3><i class="fa-solid fa-circle-info"></i> Informations Générales</h3>
+                            
+                            <div class="form-group">
+                                <label for="shop-name">Nom du Magasin</label>
+                                <input type="text" id="shop-name" placeholder="ex: Supermarché 24/7 Vinewood" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="shop-id">Identifiant Unique (Slug)</label>
+                                <input type="text" id="shop-id" placeholder="ex: 247_vinewood" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Emplacement (X, Y, Z, Heading)</label>
+                                <div class="coords-input-group">
+                                    <input type="number" step="0.01" id="coords-x" placeholder="X" required>
+                                    <input type="number" step="0.01" id="coords-y" placeholder="Y" required>
+                                    <input type="number" step="0.01" id="coords-z" placeholder="Z" required>
+                                    <input type="number" step="0.01" id="coords-h" placeholder="H" required>
+                                </div>
+                                <button type="button" id="btn-get-coords" class="btn-secondary mt-2">
+                                    <i class="fa-solid fa-location-crosshairs"></i> Prends ma position actuelle
+                                </button>
+                            </div>
+
+                            <div class="form-group">
+                                <label><i class="fa-solid fa-palette"></i> Couleur du Thème NUI</label>
+                                <div class="color-picker-wrapper">
+                                    <input type="color" id="theme-color" value="#00f2fe">
+                                    <span id="color-hex-label">#00f2fe</span>
+                                </div>
+                                <div class="color-presets" id="color-presets-container">
+                                    <!-- Dynamic Palette Chips -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Col 2: PNJ & Blips -->
+                        <div class="form-section">
+                            <h3><i class="fa-solid fa-user-ninja"></i> PNJ & Blip sur Carte</h3>
+
+                            <div class="form-group checkbox-group">
+                                <input type="checkbox" id="npc-enabled" checked>
+                                <label for="npc-enabled">Activer le PNJ (Vendeur NPC)</label>
+                            </div>
+
+                            <div class="form-group" id="group-npc-model">
+                                <label for="npc-model">Modèle de Ped</label>
+                                <input type="text" id="npc-model" value="mp_m_shopkeep_01">
+                                <div class="ped-presets" id="ped-presets-container">
+                                    <!-- Dynamic Ped Chips -->
+                                </div>
+                            </div>
+
+                            <hr class="divider">
+
+                            <div class="form-group checkbox-group">
+                                <input type="checkbox" id="blip-enabled" checked>
+                                <label for="blip-enabled">Activer le Blip sur la Carte</label>
+                            </div>
+
+                            <div class="blip-input-group" id="group-blip-details">
+                                <div class="form-group">
+                                    <label for="blip-sprite">Sprite ID</label>
+                                    <input type="number" id="blip-sprite" value="52">
+                                </div>
+                                <div class="form-group">
+                                    <label for="blip-color">Couleur ID</label>
+                                    <input type="number" id="blip-color" value="2">
+                                </div>
+                                <div class="form-group">
+                                    <label for="blip-scale">Échelle</label>
+                                    <input type="number" step="0.1" id="blip-scale" value="0.8">
+                                </div>
+                            </div>
+
+                            <div class="form-group checkbox-group mt-3">
+                                <input type="checkbox" id="is-player-owned">
+                                <label for="is-player-owned">Magasin Rachetable par un Joueur</label>
+                            </div>
+
+                            <div class="form-group hidden" id="group-buy-price">
+                                <label for="buy-price">Prix d'Achat du Magasin ($)</label>
+                                <input type="number" id="buy-price" value="50000" placeholder="50000">
+                            </div>
+                        </div>
+
+                        <!-- Col 3: Catalogue d'Articles & Validation -->
+                        <div class="form-section col-span-2">
+                            <div class="section-header-inline">
+                                <h3><i class="fa-solid fa-boxes-stacked"></i> Articles Vendu dans ce Magasin</h3>
+                                <button type="button" id="btn-add-item-row" class="btn-accent-sm">
+                                    <i class="fa-solid fa-plus"></i> Ajouter un Item
+                                </button>
+                            </div>
+
+                            <div class="items-table-wrapper">
+                                <table class="items-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 32%;">Item de l'Inventaire</th>
+                                            <th style="width: 25%;">Label Affiché</th>
+                                            <th style="width: 14%;">Prix ($)</th>
+                                            <th style="width: 14%;">Stock</th>
+                                            <th style="width: 10%;">Catégorie</th>
+                                            <th style="width: 5%;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="items-table-body">
+                                        <!-- Item Rows Inserted Dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="form-actions mt-4">
+                                <button type="submit" id="btn-save-shop" class="btn-primary-lg">
+                                    <i class="fa-solid fa-floppy-disk"></i> Enregistrer le Magasin
+                                </button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+
+                <!-- Tab 2: Gestionnaire des Shops Existants -->
+                <div id="tab-manage" class="tab-content">
+                    <div class="manage-search-bar">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="search-manage-shops" placeholder="Rechercher un magasin par nom ou ID...">
+                    </div>
+
+                    <div class="shops-grid" id="shops-list-container">
+                        <!-- Shop Cards Rendered Dynamically -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- ========================================================= -->
+        <!-- 🛍️ INTERFACE JOUEUR SHOP NUI (AVEC THÈME DYNAMIQUE) -->
+        <!-- ========================================================= -->
+        <div id="player-shop-modal" class="modal-container hidden">
+            <div class="glass-box shop-box" id="shop-dynamic-theme">
+                
+                <!-- Shop Header -->
+                <div class="shop-header">
+                    <div class="shop-title-wrapper">
+                        <div class="shop-icon-badge" id="shop-theme-icon">
+                            <i class="fa-solid fa-store"></i>
+                        </div>
+                        <div>
+                            <h2 id="player-shop-title">Supermarché 24/7</h2>
+                            <p id="player-shop-subtitle"><i class="fa-solid fa-location-dot"></i> Magasin Ouvert • Produits Frais & Équipements</p>
+                        </div>
+                    </div>
+                    <button class="btn-close" id="btn-close-shop"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <!-- Shop Toolbar & Search -->
+                <div class="shop-toolbar">
+                    <div class="search-input-wrapper">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="shop-search-input" placeholder="Rechercher un article (ex: Pain, Eau, Téléphone)...">
+                    </div>
+                    <div class="category-pills" id="shop-category-pills">
+                        <button class="cat-pill active" data-cat="all">Tous</button>
+                        <button class="cat-pill" data-cat="food">Nourriture</button>
+                        <button class="cat-pill" data-cat="drink">Boissons</button>
+                        <button class="cat-pill" data-cat="tools">Outils & Tech</button>
+                    </div>
+                </div>
+
+                <!-- Shop Main Content (Grid & Cart) -->
+                <div class="shop-layout">
+                    
+                    <!-- Item Grid -->
+                    <div class="shop-items-grid" id="shop-items-container">
+                        <!-- Item Cards Inserted Dynamically -->
+                    </div>
+
+                    <!-- Cart Drawer -->
+                    <div class="shop-cart-panel">
+                        <h3><i class="fa-solid fa-cart-shopping"></i> Mon Panier (<span id="cart-item-count">0</span>)</h3>
+                        
+                        <div class="cart-items-list" id="cart-items-container">
+                            <div class="cart-empty-state">
+                                <i class="fa-solid fa-basket-shopping"></i>
+                                <p>Votre panier est vide</p>
+                            </div>
+                        </div>
+
+                        <div class="cart-summary">
+                            <div class="summary-row">
+                                <span>Sous-total :</span>
+                                <span id="cart-subtotal">$0</span>
+                            </div>
+                            <div class="summary-row total-row">
+                                <span>TOTAL :</span>
+                                <span id="cart-total">$0</span>
+                            </div>
+
+                            <div class="payment-selector mt-3">
+                                <label><i class="fa-solid fa-wallet"></i> Mode de Paiement :</label>
+                                <div class="payment-options">
+                                    <button class="pay-btn active" data-pay="cash">
+                                        <i class="fa-solid fa-money-bill-wave"></i> Liquide
+                                    </button>
+                                    <button class="pay-btn" data-pay="bank">
+                                        <i class="fa-solid fa-credit-card"></i> Carte
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button id="btn-checkout" class="btn-checkout mt-3" disabled>
+                                <i class="fa-solid fa-check"></i> Payer la commande ($0)
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- ========================================================= -->
+        <!-- 💼 PANEL GESTION PROPRIÉTAIRE (PLAYER-OWNED SHOP) -->
+        <!-- ========================================================= -->
+        <div id="owner-panel" class="modal-container hidden">
+            <div class="glass-box owner-box">
+                <div class="admin-header">
+                    <div class="brand">
+                        <div class="brand-logo">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
+                        <div>
+                            <h1 id="owner-shop-title">Gestion de mon Magasin</h1>
+                            <p>Panel de contrôle du propriétaire</p>
+                        </div>
+                    </div>
+                    <button class="btn-close" id="btn-close-owner"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <div class="owner-dashboard">
+                    <div class="stat-card">
+                        <i class="fa-solid fa-vault"></i>
+                        <div>
+                            <span>Solde de la Caisse</span>
+                            <h2 id="owner-vault-balance">$0</h2>
+                        </div>
+                    </div>
+
+                    <div class="vault-actions">
+                        <div class="form-group">
+                            <label>Montant ($)</label>
+                            <input type="number" id="vault-amount-input" placeholder="Montant...">
+                        </div>
+                        <div class="btn-group">
+                            <button id="btn-deposit-vault" class="btn-secondary"><i class="fa-solid fa-arrow-down-to-line"></i> Déposer</button>
+                            <button id="btn-withdraw-vault" class="btn-primary"><i class="fa-solid fa-arrow-up-from-line"></i> Retirer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="js/app.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/shop.js"></script>
+    <script src="js/owner.js"></script>
+</body>
+</html>

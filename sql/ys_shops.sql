@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS `ys_shops` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `identifier` VARCHAR(50) NOT NULL,
+  `name` VARCHAR(100) NOT NULL,
+  `coords` LONGTEXT NOT NULL,
+  `npc_enabled` TINYINT(1) NOT NULL DEFAULT 1,
+  `npc_model` VARCHAR(100) NOT NULL DEFAULT 'mp_m_shopkeep_01',
+  `blip_data` LONGTEXT NOT NULL,
+  `theme_color` VARCHAR(20) NOT NULL DEFAULT '#00f2fe',
+  `items` LONGTEXT NOT NULL,
+  `restrictions` LONGTEXT DEFAULT NULL,
+  `is_player_owned` TINYINT(1) NOT NULL DEFAULT 0,
+  `buy_price` INT(11) NOT NULL DEFAULT 0,
+  `owner_identifier` VARCHAR(100) DEFAULT NULL,
+  `owner_name` VARCHAR(100) DEFAULT NULL,
+  `vault_balance` INT(11) NOT NULL DEFAULT 0,
+  `discount_percent` INT(11) NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `identifier` (`identifier`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
