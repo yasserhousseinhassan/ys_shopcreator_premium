@@ -3,7 +3,7 @@ Config = {}
 -- =================================================================
 -- 🌐 CONFIGURATION GÉNÉRALE
 -- =================================================================
-Config.Locale = 'fr' -- 'fr', 'en', 'es'
+Config.Locale = 'en' -- 'en' (default), 'fr', 'es', 'ar', 'so'
 Config.Debug = false
 
 -- Auto-détection du framework ('auto', 'esx', 'qbcore')

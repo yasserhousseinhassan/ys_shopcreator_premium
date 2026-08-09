@@ -35,34 +35,15 @@ end)
 -- Commande Admin pour ouvrir le Panel Creator
 local function GetServerInventoryItems()
     local itemsList = {}
+    local seen = {}
 
+    -- Priorité 1 : ox_inventory (liste la plus complète, inclut tous les items custom)
     if GetResourceState('ox_inventory') == 'started' then
-        local oxItems = exports.ox_inventory:Items()
-        if oxItems then
+        local ok, oxItems = pcall(function() return exports.ox_inventory:Items() end)
+        if ok and oxItems then
             for name, item in pairs(oxItems) do
-                table.insert(itemsList, {
-                    name = name,
-                    label = item.label or name
-                })
-            end
-        end
-    else
-        local framework = YS_Bridge.GetFrameworkName()
-        if framework == 'esx' then
-            local ESX = exports['es_extended']:getSharedObject()
-            if ESX and ESX.GetItems then
-                local esxItems = ESX.GetItems()
-                for name, item in pairs(esxItems) do
-                    table.insert(itemsList, {
-                        name = name,
-                        label = item.label or name
-                    })
-                end
-            end
-        elseif framework == 'qbcore' then
-            local QBCore = exports['qb-core']:GetCoreObject()
-            if QBCore and QBCore.Shared and QBCore.Shared.Items then
-                for name, item in pairs(QBCore.Shared.Items) do
+                if not seen[name] then
+                    seen[name] = true
                     table.insert(itemsList, {
                         name = name,
                         label = item.label or name
@@ -72,7 +53,79 @@ local function GetServerInventoryItems()
         end
     end
 
-    table.sort(itemsList, function(a, b) return a.label < b.label end)
+    -- Priorité 2 : qs-inventory
+    if #itemsList == 0 and GetResourceState('qs-inventory') == 'started' then
+        local ok, qsItems = pcall(function() return exports['qs-inventory']:GetItemList() end)
+        if ok and qsItems then
+            for name, item in pairs(qsItems) do
+                if not seen[name] then
+                    seen[name] = true
+                    table.insert(itemsList, {
+                        name = name,
+                        label = item.label or name
+                    })
+                end
+            end
+        end
+    end
+
+    -- Priorité 3 : codem-inventory
+    if #itemsList == 0 and GetResourceState('codem-inventory') == 'started' then
+        local ok, codemItems = pcall(function() return exports['codem-inventory']:GetItemList() end)
+        if ok and codemItems then
+            for name, item in pairs(codemItems) do
+                if not seen[name] then
+                    seen[name] = true
+                    table.insert(itemsList, {
+                        name = name,
+                        label = item.label or name
+                    })
+                end
+            end
+        end
+    end
+
+    -- Fallback : Framework natif (ESX SQL items ou QBCore Shared.Items)
+    if #itemsList == 0 then
+        local framework = YS_Bridge.GetFrameworkName()
+        if framework == 'esx' then
+            -- Récupère les items depuis la BDD ESX (table `items`)
+            MySQL.query('SELECT name, label FROM items', {}, function(rows)
+                if rows then
+                    for i = 1, #rows do
+                        local row = rows[i]
+                        if not seen[row.name] then
+                            seen[row.name] = true
+                            table.insert(itemsList, {
+                                name = row.name,
+                                label = row.label or row.name
+                            })
+                        end
+                    end
+                end
+            end)
+        elseif framework == 'qbcore' then
+            local ok, QBCore = pcall(function() return exports['qb-core']:GetCoreObject() end)
+            if ok and QBCore and QBCore.Shared and QBCore.Shared.Items then
+                for name, item in pairs(QBCore.Shared.Items) do
+                    if not seen[name] then
+                        seen[name] = true
+                        table.insert(itemsList, {
+                            name = name,
+                            label = item.label or name
+                        })
+                    end
+                end
+            end
+        end
+    end
+
+    table.sort(itemsList, function(a, b) return (a.label or '') < (b.label or '') end)
+
+    if Config.Debug then
+        print(('[YS_ShopCreator] %s item(s) détecté(s) pour le panel admin.'):format(#itemsList))
+    end
+
     return itemsList
 end
 

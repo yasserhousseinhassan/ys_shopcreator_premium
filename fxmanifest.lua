@@ -19,9 +19,11 @@ files {
 
 shared_scripts {
     'config.lua',
-    'locales/fr.lua',
     'locales/en.lua',
+    'locales/fr.lua',
     'locales/es.lua',
+    'locales/ar.lua',
+    'locales/so.lua',
     'bridge/framework.lua',
     'bridge/inventory.lua',
     'bridge/target.lua'
