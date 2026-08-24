@@ -11,13 +11,15 @@ local function LoadShopsFromDatabase()
                 row.blip_data = json.decode(row.blip_data or '{}')
                 row.items = json.decode(row.items or '[]')
                 row.restrictions = json.decode(row.restrictions or '{}')
-                row.npc_enabled = row.npc_enabled == 1
-                row.is_player_owned = row.is_player_owned == 1
+                -- oxmysql caste automatiquement les colonnes TINYINT(1) en booléen Lua,
+                -- donc on doit accepter à la fois le format booléen et numérique (1/0)
+                row.npc_enabled = row.npc_enabled == 1 or row.npc_enabled == true
+                row.is_player_owned = row.is_player_owned == 1 or row.is_player_owned == true
 
                 ShopsTable[row.identifier] = row
             end
         end
-        print(('[YS_ShopCreator] %s magasin(s) chargé(s) depuis la base de données.'):format(#results or 0))
+        print(('[YS_ShopCreator] %s magasin(s) chargé(s) depuis la base de données.'):format(results and #results or 0))
         TriggerClientEvent('ys_shopcreator:client:syncShops', -1, ShopsTable)
     end)
 end
